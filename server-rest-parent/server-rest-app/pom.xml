@@ -11,5 +11,13 @@
 
     <artifactId>server-rest-app</artifactId>
 
+    <dependencies>
+        <dependency>
+            <groupId>com.beeij</groupId>
+            <artifactId>mysql-dao</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+    </dependencies>
+
 
 </project>
