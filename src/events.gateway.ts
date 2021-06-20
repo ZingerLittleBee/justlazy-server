@@ -23,18 +23,33 @@ export class EventsGateway implements OnGatewayInit, OnGatewayConnection{
     private schedulerRegistry: SchedulerRegistry
   ) {}
 
+  /**
+   * server 信息
+   */
   servers: ServerDto[]
 
+  /**
+   * 数据仓库
+   */
+  responseData = {}
+
+  /**
+   * server 的连接
+   */
   conns = []
 
   @WebSocketServer()
   server: Server;
 
+  /**
+   * 定时任务
+   */
   job;
 
   addCronJob(name: string, cron: string) {
      this.job = new CronJob(cron, () => {
-      this.server.emit('servers-message', 'hello client1')
+      this.server.volatile.emit('servers-message', this.responseData)
+      this.responseData = {}
     });
     this.schedulerRegistry.addCronJob(name, this.job);
     Logger.log(`定时任务: ${name}, 开始执行`)
@@ -53,10 +68,8 @@ export class EventsGateway implements OnGatewayInit, OnGatewayConnection{
     this.addCronJob('servers-message', '*/2 * * * * *')
   }
 
-
   async afterInit(server: any) {
     this.servers = serverDosToDtos(await this.serverService.findAll())
-    console.log('servers', this.servers)
     if (this.servers?.length != 0) {
       let resData = {}
       this.servers.forEach(s => {
@@ -84,8 +97,8 @@ export class EventsGateway implements OnGatewayInit, OnGatewayConnection{
                   console.log('infoStr', infoStr)
                   resData[s.id] = JSON.parse(infoStr)
                   if (index === this.conns.length - 1) {
-                    this.server.emit('servers-message', resData)
-                    Logger.log('发送 server-message 消息')
+                    this.responseData = resData
+                    Logger.log('更新 resData')
                     console.log(resData)
                     resData = {}
                   }
@@ -99,5 +112,8 @@ export class EventsGateway implements OnGatewayInit, OnGatewayConnection{
   }
 
   handleConnection(client: any, ...args: any[]): any {
+    client.on('disconnect', (reason) => {
+      this.job.stop()
+    })
   }
 }

@@ -3,13 +3,11 @@ import { Logger } from '@nestjs/common'
 import { Observable } from 'rxjs';
 
 const execCmd = (conn: Client, cmd: string) => {
-  let foo
   return new Promise((resolve, reject) => {
     conn.exec(cmd, (err, stream) => {
       if (err) throw err;
       stream.on('close', (code, signal) => {
         Logger.warn(`Stream :: close :: code: ${code}, signal: ${signal}`)
-        console.log();
       })
       resolve(new Observable(subscriber => {
         stream.on('data', (data) => {
