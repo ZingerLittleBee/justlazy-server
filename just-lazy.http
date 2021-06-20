@@ -4,10 +4,10 @@ content-type: application/json
 
 {
   "name": "huawei",
-  "host": "122.112.247.151",
+  "host": "127.0.0.1",
   "port": 22,
   "username":"root",
-  "password":"4@w!YrWKRjKNsU"
+  "password":"root"
 }
 
 ###
