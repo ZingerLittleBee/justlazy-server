@@ -1,0 +1,14 @@
+
+POST {{host}}/server
+content-type: application/json
+
+{
+  "name": "huawei",
+  "host": "122.112.247.151",
+  "port": 22,
+  "username":"root",
+  "password":"4@w!YrWKRjKNsU"
+}
+
+###
+GET {{host}}/servers
