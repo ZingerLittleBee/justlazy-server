@@ -1,41 +1,39 @@
-import { Client, ConnectConfig } from 'ssh2';
+import { Client, ConnectConfig } from 'ssh2'
 import { Logger } from '@nestjs/common'
-import { Observable } from 'rxjs';
+import { Observable } from 'rxjs'
 
 const execCmd = (conn: Client, cmd: string) => {
   return new Promise((resolve, reject) => {
     conn.exec(cmd, (err, stream) => {
-      if (err) throw err;
+      if (err) throw err
       stream.on('close', (code, signal) => {
         Logger.warn(`Stream :: close :: code: ${code}, signal: ${signal}`)
       })
-      resolve(new Observable(subscriber => {
-        stream.on('data', (data) => {
-          subscriber.next(data.toString());
-          if (data.toString().split(':')[0] === 'ROM') {
-            subscriber.complete()
-          }
+      resolve(
+        new Observable((subscriber) => {
+          stream.on('data', (data) => {
+            subscriber.next(data.toString())
+            if (data.toString().split(':')[0] === 'ROM') {
+              subscriber.complete()
+            }
+          })
         })
-      }))
+      )
       stream.stderr.on('data', (data) => {
         reject(data)
         Logger.error(`${cmd},执行出错: ${data}`)
-      });
-    });
+      })
+    })
   })
 }
 
-
-const SSHClient = (option: ConnectConfig, cb: Function) => {
-  const conn = new Client();
+const SSHClient = (option: ConnectConfig, cb: (conn: Client) => void) => {
+  const conn = new Client()
   conn.on('ready', () => {
-    console.log('Client :: ready');
+    console.log('Client :: ready')
     cb(conn)
   })
-  conn.connect(option);
+  conn.connect(option)
 }
 
-export {
-  execCmd,
-  SSHClient
-}
+export { execCmd, SSHClient }

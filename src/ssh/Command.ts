@@ -10,12 +10,19 @@ const getNetworkCard = () => {
   return `ls /sys/class/net`
 }
 
-const getNetAutoUnitUsage = (inOrOut: 'rx'|'tx', NIC = 'eth0', interval = '1') => {
+const getNetAutoUnitUsage = (
+  inOrOut: 'rx' | 'tx',
+  NIC = 'eth0',
+  interval = '1'
+) => {
   return `old="$(</sys/class/net/${NIC}/statistics/${inOrOut}_bytes)"; $(sleep ${interval}); now=$(</sys/class/net/${NIC}/statistics/${inOrOut}_bytes); awk -v now=$now -v old=$old 'BEGIN {kbs = (now - old)/1024*8; if (kbs/1024 >= 1000) printf "%.2fGb/s\\n", kbs/1024/1024; else if (kbs >= 1000) printf "%.2fMb/s\\n", kbs/1024; else printf "%.2fKb/s\\n", kbs}'`
 }
 
-
-const getNetBytesUsage = (inOrOut: 'rx'|'tx', NIC = 'eth0', interval = '1') => {
+const getNetBytesUsage = (
+  inOrOut: 'rx' | 'tx',
+  NIC = 'eth0',
+  interval = '1'
+) => {
   return `old="$(</sys/class/net/${NIC}/statistics/${inOrOut}_bytes)"; $(sleep ${interval}); echo \`expr $(</sys/class/net/${NIC}/statistics/${inOrOut}_bytes) - $old\``
 }
 
@@ -24,9 +31,15 @@ const getNetUsage = (NIC = 'eth0', interval = '0.5') => {
 }
 
 const shellAllInOne = (NIC = 'eth0', interval = '0.5') => {
-  return cpuUsage + '&&' + ramUsage + '&&' + getNetUsage('eth0', '0.5') + '&&' + diskUsage
+  return (
+    cpuUsage +
+    '&&' +
+    ramUsage +
+    '&&' +
+    getNetUsage('eth0', '0.5') +
+    '&&' +
+    diskUsage
+  )
 }
 
-export {
-  shellAllInOne
-}
+export { shellAllInOne }

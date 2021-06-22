@@ -2,22 +2,23 @@ import {
   OnGatewayConnection,
   SubscribeMessage,
   WebSocketGateway,
-  WebSocketServer,
-} from '@nestjs/websockets';
-import { Server } from 'socket.io';
-import { OnGatewayInit } from '@nestjs/websockets/interfaces/hooks/on-gateway-init.interface';
-import { ServerService } from './modules/server/server.service';
-import { ServerDto } from './modules/server/server.dto';
-import { OnEvent } from '@nestjs/event-emitter';
-import { Logger } from '@nestjs/common';
-import { SchedulerRegistry } from '@nestjs/schedule';
-import { CronJob } from 'cron';
-import { execCmd, SSHClient } from './ssh/SSHClient';
-import { shellAllInOne } from './ssh/Command';
-import { serverDosToDtos } from './modules/server/server.convert';
+  WebSocketServer
+} from '@nestjs/websockets'
+import { Server } from 'socket.io'
+import { OnGatewayInit } from '@nestjs/websockets/interfaces/hooks/on-gateway-init.interface'
+import { ServerService } from './modules/server/server.service'
+import { ServerDto } from './modules/server/server.dto'
+import { OnEvent } from '@nestjs/event-emitter'
+import { Logger } from '@nestjs/common'
+import { SchedulerRegistry } from '@nestjs/schedule'
+import { CronJob } from 'cron'
+import { execCmd, SSHClient } from './ssh/SSHClient'
+import { shellAllInOne } from './ssh/Command'
+import { serverDosToDtos } from './modules/server/server.convert'
+import { Client } from 'ssh2'
 
 @WebSocketGateway(9527, { namespace: 'servers' })
-export class EventsGateway implements OnGatewayInit, OnGatewayConnection{
+export class EventsGateway implements OnGatewayInit, OnGatewayConnection {
   constructor(
     private readonly serverService: ServerService,
     private schedulerRegistry: SchedulerRegistry
@@ -33,27 +34,92 @@ export class EventsGateway implements OnGatewayInit, OnGatewayConnection{
    */
   responseData = {}
 
+  connServerMap: Map<string, Client>
+
   /**
    * server 的连接
    */
   conns = []
 
   @WebSocketServer()
-  server: Server;
+  server: Server
+
+  createConnServerMap() {
+    if (this.servers?.length != 0) {
+      this.servers.forEach((s) => {
+        const {
+          host,
+          port = 22,
+          username = 'root',
+          password,
+          key: privateKey
+        } = s
+        SSHClient(
+          {
+            host,
+            port,
+            username,
+            password,
+            privateKey
+          },
+          (conn) => {
+            this.connServerMap.set(s.id, conn)
+          }
+        )
+      })
+    }
+  }
+
+  updateResponseData() {
+    const mapSize = this.connServerMap.size
+    if (mapSize === 0) return
+    this.connServerMap.forEach((value, key) => {
+      execCmd(value, shellAllInOne()).then((res: any) => {
+        let infoStr = ''
+        res.subscribe({
+          next: (x) => {
+            const removeLineFeed = x.replace(/[\r\n]/g, '')
+            infoStr = infoStr ? infoStr + ',' + removeLineFeed : removeLineFeed
+          },
+          error: (err) => Logger.error('Observer got an error: ' + err),
+          complete: () => {
+            Logger.log('Observer got a complete notification')
+            infoStr = `{${infoStr}}`.replace(/([A-Za-z]+)(?=:)/g, '"$1"')
+            console.log('infoStr', infoStr)
+            this.responseData[key] = JSON.parse(infoStr)
+          }
+        })
+      })
+    })
+  }
 
   /**
-   * 定时任务
+   * 发送 socket 消息定时任务
    */
-  job;
+  sendJob: CronJob
 
-  addCronJob(name: string, cron: string) {
-     this.job = new CronJob(cron, () => {
+  /**
+   * 更新 responseData 定时任务
+   */
+  updateJob: CronJob
+
+  addSendCronJob(name: string, cron: string) {
+    this.sendJob = new CronJob(cron, () => {
       this.server.volatile.emit('servers-message', this.responseData)
       this.responseData = {}
-    });
-    this.schedulerRegistry.addCronJob(name, this.job);
+    })
+    this.schedulerRegistry.addCronJob(name, this.sendJob)
     Logger.log(`定时任务: ${name}, 开始执行`)
-    this.job.start();
+    this.sendJob.start()
+  }
+
+  addUpdateCronJob(name: string, cron: string) {
+    this.updateJob = new CronJob(cron, () => {
+      this.updateResponseData()
+    })
+    this.schedulerRegistry.addCronJob(name, this.updateJob)
+    Logger.log(`定时任务: ${name}, 开始执行`)
+    this.updateJob.start()
   }
 
   @OnEvent('servers.refresh')
@@ -64,56 +130,20 @@ export class EventsGateway implements OnGatewayInit, OnGatewayConnection{
 
   @SubscribeMessage('start-servers-listener')
   handleMessage(client: any, payload: any) {
-    if (!this.job) return
-    this.addCronJob('servers-message', '*/2 * * * * *')
+    if (!this.sendJob) return
+    this.addSendCronJob('servers-info', '*/2 * * * * *')
+    if (!this.updateJob) return
+    this.addUpdateCronJob('update-servers-info', '*/1 * * * * *')
   }
 
   async afterInit(server: any) {
     this.servers = serverDosToDtos(await this.serverService.findAll())
-    if (this.servers?.length != 0) {
-      let resData = {}
-      this.servers.forEach(s => {
-        const { host, port = 22, username = 'root', password, key: privateKey } = s
-        SSHClient({
-          host, port, username, password, privateKey
-        }, (conn) => {
-          this.conns.push(conn)
-          this.conns.forEach((c, index) => {
-            execCmd(c, shellAllInOne()).then((res: any) => {
-              let infoStr = ''
-              res.subscribe({
-                next: x => {
-                  let removeLineFeed  = x.replace(/[\r\n]/g,"")
-                  if (infoStr) {
-                    infoStr = infoStr + ',' + removeLineFeed
-                  } else {
-                    infoStr = removeLineFeed
-                  }
-                },
-                error: err => Logger.error('Observer got an error: ' + err),
-                complete: () => {
-                  Logger.log('Observer got a complete notification')
-                  infoStr = `{${infoStr}}`.replace(/([A-Za-z]+)(?=:)/g, '"$1"')
-                  console.log('infoStr', infoStr)
-                  resData[s.id] = JSON.parse(infoStr)
-                  if (index === this.conns.length - 1) {
-                    this.responseData = resData
-                    Logger.log('更新 resData')
-                    console.log(resData)
-                    resData = {}
-                  }
-                }
-              })
-            })
-          })
-        })
-      })
-    }
+    this.createConnServerMap()
   }
 
   handleConnection(client: any, ...args: any[]): any {
     client.on('disconnect', (reason) => {
-      this.job.stop()
+      this.sendJob.stop()
     })
   }
 }

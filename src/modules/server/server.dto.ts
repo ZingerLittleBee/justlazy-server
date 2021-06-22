@@ -1,7 +1,6 @@
 import { IsString, IsNotEmpty } from 'class-validator'
 
-
-export class ServerDto{
+export class ServerDto {
   constructor(id, name, host, port, username, password, key) {
     this.id = id
     this.name = name
@@ -13,17 +12,17 @@ export class ServerDto{
   }
 
   @IsString()
-  readonly id: string;
+  readonly id: string
 
   @IsString()
-  readonly name: string;
+  readonly name: string
 
   @IsNotEmpty()
   readonly host: string
 
   readonly port: number
 
-  readonly username: string;
+  readonly username: string
 
   readonly password: string
 

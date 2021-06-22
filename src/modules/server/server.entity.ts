@@ -1,10 +1,10 @@
-import { Entity, Column } from 'typeorm';
-import { BaseEntity } from '../../common/base.entity';
+import { Entity, Column } from 'typeorm'
+import { BaseEntity } from '../../common/base.entity'
 
 @Entity()
-export class Server extends BaseEntity{
+export class Server extends BaseEntity {
   constructor(name, host, key, port, username, password) {
-    super();
+    super()
     this.name = name
     this.host = host
     this.username = username
@@ -14,7 +14,7 @@ export class Server extends BaseEntity{
   }
 
   @Column({ nullable: true })
-  name: string;
+  name: string
 
   @Column({ unique: true })
   host: string
@@ -23,7 +23,7 @@ export class Server extends BaseEntity{
   port: number
 
   @Column({ default: 'root' })
-  username: string;
+  username: string
 
   @Column({ default: 'root' })
   password: string
