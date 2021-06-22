@@ -1,4 +1,4 @@
-import { HttpException, Injectable } from '@nestjs/common'
+import { HttpException, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { Server } from './server.entity'
@@ -24,6 +24,7 @@ export class ServerService {
     const server = new Server(name, host, key, port, username, password)
     try {
       await this.serverRepository.save(server)
+      Logger.log("server 保存成功, emit refresh")
       this.eventEmitter.emit('servers.refresh', server.id)
     } catch (e) {
       throw new HttpException(`添加失败, ${e.message}`, 400)

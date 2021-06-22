@@ -14,7 +14,7 @@ import { SchedulerRegistry } from '@nestjs/schedule'
 import { CronJob } from 'cron'
 import { execCmd, SSHClient } from './ssh/SSHClient'
 import { shellAllInOne } from './ssh/Command'
-import { serverDosToDtos } from './modules/server/server.convert'
+import { serverDosToDtos, serverDoToDto } from './modules/server/server.convert';
 import { Client } from 'ssh2'
 
 @WebSocketGateway(9527, { namespace: 'servers' })
@@ -34,7 +34,10 @@ export class EventsGateway implements OnGatewayInit, OnGatewayConnection {
    */
   responseData = {}
 
-  connServerMap: Map<string, Client>
+  /**
+   * serverId 与 conn 关系映射
+   */
+  connServerMap: Map<string, Client> = new Map()
 
   /**
    * server 的连接
@@ -122,17 +125,40 @@ export class EventsGateway implements OnGatewayInit, OnGatewayConnection {
     this.updateJob.start()
   }
 
+  /**
+   * 处理 server 添加或更新事件
+   * @param payload serverId
+   */
   @OnEvent('servers.refresh')
-  async handleOrderCreatedEvent() {
+  async handlerServerAddOrUpdateEvent(payload) {
+    console.log('payload', payload)
     Logger.log('监听到 servers.refresh 事件')
     this.servers = serverDosToDtos(await this.serverService.findAll())
+    let serverDto = serverDoToDto(await this.serverService.findOne(payload))
+    let index = this.servers?.findIndex(s => s.id === payload)
+    if (index > -1) {
+      this.servers[index] = serverDto
+    } else {
+      this.servers.push(serverDto)
+    }
+    const { host, port = 22, username = 'root', password, key: privateKey } = serverDto
+    SSHClient({ host, port, username, password, privateKey }, (conn) => {
+        this.connServerMap.set(serverDto.id, conn)
+      }
+    )
   }
 
+  /**
+   * 监听客户端 start-servers-listener socket 事件
+   * @param client
+   * @param payload
+   */
   @SubscribeMessage('start-servers-listener')
   handleMessage(client: any, payload: any) {
-    if (!this.sendJob) return
+    Logger.log("监听到 start-servers-listener 事件")
+    if (this.sendJob) return
     this.addSendCronJob('servers-info', '*/2 * * * * *')
-    if (!this.updateJob) return
+    if (this.updateJob) return
     this.addUpdateCronJob('update-servers-info', '*/1 * * * * *')
   }
 
@@ -143,7 +169,8 @@ export class EventsGateway implements OnGatewayInit, OnGatewayConnection {
 
   handleConnection(client: any, ...args: any[]): any {
     client.on('disconnect', (reason) => {
-      this.sendJob.stop()
+      // this.sendJob?.stop()
+      // this.updateJob?.stop()
     })
   }
 }
