@@ -11,5 +11,11 @@
 
     <artifactId>server-ssh-api</artifactId>
 
+    <dependencies>
+        <dependency>
+            <groupId>com.hierynomus</groupId>
+            <artifactId>sshj</artifactId>
+        </dependency>
+    </dependencies>
 
 </project>

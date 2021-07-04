@@ -11,5 +11,16 @@
 
     <artifactId>server-socket-app</artifactId>
 
+    <dependencies>
+        <dependency>
+            <groupId>com.beeij</groupId>
+            <artifactId>server-socket-api</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
+    </dependencies>
 
 </project>

@@ -26,6 +26,8 @@
     <properties>
         <mybatis-plus.version>3.4.3</mybatis-plus.version>
         <mybatis-plus-boot-starter.version>3.4.3</mybatis-plus-boot-starter.version>
+        <hutool.version>5.7.3</hutool.version>
+        <ssj.version>0.31.0</ssj.version>
     </properties>
 
     <dependencies>
@@ -33,6 +35,11 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-all</artifactId>
+            <version>${hutool.version}</version>
         </dependency>
     </dependencies>
 
@@ -43,7 +50,11 @@
                 <artifactId>server-socket-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
-
+            <dependency>
+                <groupId>com.beeij</groupId>
+                <artifactId>server-socket-infrastructure</artifactId>
+                <version>${project.version}</version>
+            </dependency>
             <dependency>
                 <groupId>com.beeij</groupId>
                 <artifactId>server-rest-app</artifactId>
@@ -52,14 +63,29 @@
 
             <dependency>
                 <groupId>com.beeij</groupId>
-                <artifactId>mysql-common</artifactId>
+                <artifactId>server-ssh-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.beeij</groupId>
+                <artifactId>server-ssh-app</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
             <dependency>
+                <groupId>com.beeij</groupId>
+                <artifactId>mysql-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>com.baomidou</groupId>
                 <artifactId>mybatis-plus-boot-starter</artifactId>
                 <version>${mybatis-plus-boot-starter.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.hierynomus</groupId>
+                <artifactId>sshj</artifactId>
+                <version>${ssj.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

@@ -11,5 +11,11 @@
 
     <artifactId>server-ssh-infrastructure</artifactId>
 
+    <dependencies>
+        <dependency>
+            <groupId>com.beeij</groupId>
+            <artifactId>server-ssh-app</artifactId>
+        </dependency>
+    </dependencies>
 
 </project>

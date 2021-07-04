@@ -15,6 +15,7 @@
         <module>server-socket-api</module>
         <module>server-socket-app</module>
         <module>server-socket-infrastructure</module>
+        <module>server-socket-it</module>
     </modules>
 
 
