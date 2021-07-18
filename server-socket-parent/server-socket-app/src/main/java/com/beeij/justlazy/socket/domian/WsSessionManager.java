@@ -4,6 +4,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -21,9 +23,17 @@ public class WsSessionManager {
     private static final ConcurrentHashMap<String, WebSocketSession> SESSION_POOL = new ConcurrentHashMap<>();
 
     /**
+     * SESSION_POOL 是否为空
+     * @return boolean
+     */
+    public static boolean isEmpty() {
+        return SESSION_POOL.isEmpty();
+    }
+
+    /**
      * 添加 session
      *
-     * @param key
+     * @param key key
      */
     public static void add(String key, WebSocketSession session) {
         // 添加 session
@@ -33,8 +43,8 @@ public class WsSessionManager {
     /**
      * 删除 session,会返回删除的 session
      *
-     * @param key
-     * @return
+     * @param key key
+     * @return WebSocketSession
      */
     public static WebSocketSession remove(String key) {
         // 删除 session
@@ -44,7 +54,7 @@ public class WsSessionManager {
     /**
      * 删除并同步关闭连接
      *
-     * @param key
+     * @param key key
      */
     public static void removeAndClose(String key) {
         WebSocketSession session = remove(key);
@@ -53,20 +63,26 @@ public class WsSessionManager {
                 // 关闭连接
                 session.close();
             } catch (IOException e) {
-                // todo: 关闭出现异常处理
-                e.printStackTrace();
+                log.warn("WebSocket 连接关闭失败", e);
             }
         }
     }
 
     /**
      * 获得 session
-     *
-     * @param key
-     * @return
+     * @param key key
+     * @return WebSocketSession
      */
     public static WebSocketSession get(String key) {
         // 获得 session
         return SESSION_POOL.get(key);
+    }
+
+    /**
+     * 获取所有 session
+     * @return List<WebSocketSession>
+     */
+    public static List<WebSocketSession> getAllSession() {
+        return new ArrayList<>(SESSION_POOL.values());
     }
 }

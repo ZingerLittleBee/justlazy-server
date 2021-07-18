@@ -17,6 +17,4 @@
             <artifactId>server-ssh-api</artifactId>
         </dependency>
     </dependencies>
-
-
 </project>

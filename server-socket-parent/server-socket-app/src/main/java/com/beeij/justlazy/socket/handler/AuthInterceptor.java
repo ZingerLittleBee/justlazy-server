@@ -13,7 +13,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 /**
- * 描述
+ * WebSocket 认证拦截器
  *
  * @author ye
  * @version 1.0.0, 2021-07-04
@@ -26,12 +26,12 @@ public class AuthInterceptor implements HandshakeInterceptor {
     /**
      * 握手前
      *
-     * @param request
-     * @param response
-     * @param wsHandler
-     * @param attributes
-     * @return
-     * @throws Exception
+     * @param request request
+     * @param response response
+     * @param wsHandler wsHandler
+     * @param attributes attributes
+     * @return boolean
+     * @throws Exception Exception
      */
     @Override
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
@@ -40,23 +40,23 @@ public class AuthInterceptor implements HandshakeInterceptor {
         Map<String, String> paramMap = HttpUtil.decodeParamMap(request.getURI().getQuery(), StandardCharsets.UTF_8);
         String uid = paramMap.get("token");
         if (StrUtil.isNotBlank(uid)) {
+            // TODO 验证 token 有效性
             // 放入属性域
             attributes.put("token", uid);
-            log.info("用户 token: {}, 请求握手", uid);
+            log.info("请求握手, 用户{},  token: {}", request.getRemoteAddress(), uid);
             return true;
         }
-        System.out.println("");
-        log.warn("用户: {}, 登录已失效", request.getRemoteAddress());
+        log.warn("无有效 token, 用户: {}", request.getRemoteAddress());
         return false;
     }
 
     /**
      * 握手后
      *
-     * @param request
-     * @param response
-     * @param wsHandler
-     * @param exception
+     * @param request request
+     * @param response response
+     * @param wsHandler wsHandler
+     * @param exception exception
      */
     @Override
     public void afterHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler, Exception exception) {

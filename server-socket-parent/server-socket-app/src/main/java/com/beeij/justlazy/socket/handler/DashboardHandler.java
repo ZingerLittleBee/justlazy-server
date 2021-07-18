@@ -11,7 +11,7 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 import java.time.LocalDateTime;
 
 /**
- * 描述
+ * DashboardHandler
  *
  * @author ye
  * @version 1.0.0, 2021-07-04
@@ -24,27 +24,27 @@ public class DashboardHandler extends TextWebSocketHandler {
     /**
      * socket 建立成功事件
      *
-     * @param session
-     * @throws Exception
+     * @param session session
      */
     @Override
-    public void afterConnectionEstablished(WebSocketSession session) throws Exception {
+    public void afterConnectionEstablished(WebSocketSession session) {
         Object token = session.getAttributes().get("token");
+        log.info("WebSocket 连接已建立, uri: {}, token: {}", session.getUri(), token);
         if (token != null) {
             // 用户连接成功，放入在线用户缓存
             WsSessionManager.add(token.toString(), session);
         } else {
             log.error("用户登录已经失效!");
-            throw new RuntimeException("用户登录已经失效!");
         }
+        // 开启发送 Dashboard 信息线程
     }
 
     /**
      * 接收消息事件
      *
-     * @param session
-     * @param message
-     * @throws Exception
+     * @param session session
+     * @param message message
+     * @throws Exception Exception
      */
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
@@ -58,12 +58,11 @@ public class DashboardHandler extends TextWebSocketHandler {
     /**
      * socket 断开连接时
      *
-     * @param session
-     * @param status
-     * @throws Exception
+     * @param session session
+     * @param status status
      */
     @Override
-    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
+    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
         Object token = session.getAttributes().get("token");
         if (token != null) {
             // 用户退出，移除缓存

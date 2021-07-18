@@ -1,9 +1,9 @@
-package com.beeij.justlazy.ssh.domian;
+package com.beeij.justlazy.ssh;
 
 import lombok.*;
 
 /**
- * 描述
+ * 要操作的服务器信息
  *
  * @author ye
  * @version 1.0.0, 2021-07-04
@@ -13,6 +13,7 @@ import lombok.*;
 @Getter
 @Setter
 @ToString
+@EqualsAndHashCode
 @NoArgsConstructor
 @AllArgsConstructor
 public class ServerInfo {
