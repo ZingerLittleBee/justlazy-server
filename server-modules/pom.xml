@@ -13,7 +13,23 @@
     <packaging>pom</packaging>
     <modules>
         <module>mysql-dao</module>
+        <module>server-info-parent</module>
     </modules>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.beeij</groupId>
+                <artifactId>server-info-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.beeij</groupId>
+                <artifactId>server-info-dao</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
 
 </project>

@@ -9,12 +9,18 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>mysql-dao</artifactId>
+    <artifactId>server-info-parent</artifactId>
+    <packaging>pom</packaging>
+    <modules>
+        <module>server-info-api</module>
+        <module>server-info-app</module>
+        <module>server-info-infrastructure</module>
+        <module>server-info-dao</module>
+    </modules>
 
-    <dependencies>
-        <dependency>
-            <groupId>com.beeij</groupId>
-            <artifactId>mysql-common</artifactId>
-        </dependency>
-    </dependencies>
+    <properties>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+    </properties>
+
 </project>
